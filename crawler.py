@@ -51,12 +51,16 @@ def arg_required(args, fields=[]):
 
 
 def output(data, filepath):
+    print("WRITING IN OUTPUT FILE")
+    # print(data, filepath)
     out = json.dumps(data, ensure_ascii=False)
     if filepath:
-        with open(filepath, "w", encoding="utf8") as f:
+        with open(filepath, "a+", encoding="utf8") as f:
+            f.write("\n")
             f.write(out)
     else:
-        print(out)
+        # print(out)
+        pass
 
 
 if __name__ == "__main__":
@@ -85,8 +89,59 @@ if __name__ == "__main__":
             args.output,
         )
     elif args.mode == "profile":
-        arg_required("username")
-        output(get_profile(args.username), args.output)
+        try:
+            with open("pending.json", "r") as f:
+                users_list = f.read()
+
+            users_list = json.loads(users_list)
+        except:
+            print("NOT ABLE TO READ pending.json file")
+            exit()
+
+        try:
+            with open("visited.json", "r") as f:
+                visited = f.read()
+
+            visited = json.loads(visited)
+        except:
+            print("NOT ABLE TO READ THE visited.json file")
+            exit()
+        
+        visited = set(visited)
+
+        while True:
+            # arg_required("username")
+            while True:
+                if not users_list:
+                    print("NO USERS AVAILABLE")
+                    exit()
+                next_user = users_list[0]
+                if next_user not in visited:
+                    break
+                del users_list[0]
+            
+            print("CHECKING FOR THE USER ", next_user)
+            data = get_profile(next_user)
+            output(data, "users.json")
+            del users_list[0]
+            print("FOUND DATA FOR ", next_user)
+            users_list.extend(data.get("followers", []))
+            users_list.extend(data.get("following", []))
+            users_list = list(set(users_list))
+            
+            try:
+                with open("pending.json", "w") as f:
+                    f.write(json.dumps(users_list))
+            except:
+                print("NOT ABLE TO WRITE THE UPDATED LIST TO pending.json file")
+
+            visited.add(next_user)
+            try:
+                with open("visited.json", "w") as f:
+                    f.write(json.dumps(list(visited)))
+            except:
+                print("NOT ABLE TO WRITE THE VISITED LIST TO visited.json file")
+
     elif args.mode == "profile_script":
         arg_required("username")
         output(get_profile_from_script(args.username), args.output)

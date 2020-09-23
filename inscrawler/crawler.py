@@ -93,15 +93,70 @@ class InsCrawler(Logging):
 
         check_login()
 
+    def get_followers(self):
+        likers = set()
+        
+        try:
+            likers_elems = self.browser.driver.find_elements_by_xpath('/html/body/div[4]/div/div/div[2]/ul/div/li')
+        except:
+            likers_elems = []
+        
+        last_liker = None
+        while likers_elems:
+            
+            for ele in likers_elems:
+                try:
+                    name = ele.find_element_by_class_name('FPmhX').get_attribute('innerHTML')
+                    likers.add(name)
+                except:
+                    continue
+
+            if last_liker == likers_elems[-1]:
+                break
+
+            last_liker = likers_elems[-1]
+            last_liker.location_once_scrolled_into_view
+            sleep(0.6)
+            try:
+                likers_elems = list(self.browser.driver.find_elements_by_xpath('/html/body/div[4]/div/div/div[2]/ul/div/li'))
+            except:
+                likers_elems = []
+        
+        close_btn = self.browser.find_one(".eiUFA .wpO6b ")
+        close_btn.click()
+        return list(likers)
+
     def get_user_profile(self, username):
         browser = self.browser
         url = "%s/%s/" % (InsCrawler.URL, username)
         browser.get(url)
+        time.sleep(2)
+        try:
+            followers_elem = browser.driver.find_element_by_xpath('//*[@id="react-root"]/section/main/div/header/section/ul/li[2]')
+            followers_elem.click()
+            followers = self.get_followers()
+        except:
+            followers = []
+        # print(followers)
+        browser.get(url)
+        time.sleep(2)
+        try:
+            follwing_elem = browser.driver.find_element_by_xpath('//*[@id="react-root"]/section/main/div/header/section/ul/li[3]')
+            follwing_elem.click()
+            following = self.get_followers()
+        except:
+            following = []
+
+        # print(following)
+        browser.get(url)
+        time.sleep(2)
         name = browser.find_one(".rhpdm")
         desc = browser.find_one(".-vDIg span")
         photo = browser.find_one("._6q-tv")
         statistics = [ele.text for ele in browser.find(".g47SY")]
-        post_num, follower_num, following_num = statistics
+
+        post_num, follower_num, following_num = statistics        
+
         return {
             "name": name.text,
             "desc": desc.text if desc else None,
@@ -109,6 +164,8 @@ class InsCrawler(Logging):
             "post_num": post_num,
             "follower_num": follower_num,
             "following_num": following_num,
+            "followers": followers,
+            "following": following
         }
 
     def get_user_profile_from_script_shared_data(self, username):
@@ -217,7 +274,7 @@ class InsCrawler(Logging):
                 dict_post["key"] = cur_key
                 fetch_datetime(browser, dict_post)
                 fetch_imgs(browser, dict_post)
-                fetch_likes_plays(browser, dict_post)
+                # fetch_likes_plays(browser, dict_post)
                 fetch_likers(browser, dict_post)
                 fetch_caption(browser, dict_post)
                 fetch_comments(browser, dict_post)

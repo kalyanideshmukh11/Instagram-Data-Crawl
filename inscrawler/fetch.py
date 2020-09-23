@@ -17,16 +17,16 @@ def get_parsed_hashtags(raw_text):
 
 
 def fetch_mentions(raw_test, dict_obj):
-    if not settings.fetch_mentions:
-        return
+    # if not settings.fetch_mentions:
+    #     return
 
     mentions = get_parsed_mentions(raw_test)
     if mentions:
         dict_obj["mentions"] = mentions
 
 def fetch_hashtags(raw_test, dict_obj):
-    if not settings.fetch_hashtags:
-        return
+    # if not settings.fetch_hashtags:
+    #     return
 
     hashtags = get_parsed_hashtags(raw_test)
     if hashtags:
@@ -61,8 +61,8 @@ def fetch_imgs(browser, dict_post):
     dict_post["img_urls"] = list(img_urls)
 
 def fetch_likes_plays(browser, dict_post):
-    if not settings.fetch_likes_plays:
-        return
+    # if not settings.fetch_likes_plays:
+    #     return
 
     likes = None
     el_likes = browser.find_one(".Nm9Fw > * > span")
@@ -85,12 +85,17 @@ def fetch_likes_plays(browser, dict_post):
 
 
 def fetch_likers(browser, dict_post):
-    if not settings.fetch_likers:
-        return
+    # if not settings.fetch_likers:
+    #     return
     like_info_btn = browser.find_one(".EDfFK ._0mzm-.sqdOP")
+    like_info_btn = browser.driver.find_element_by_xpath('/html/body/div[4]/div[2]/div/article/div[3]/section[2]/div/div/button')
+    if not like_info_btn:
+        print("NO like button")
+        return
     like_info_btn.click()
 
     likers = {}
+    
     liker_elems_css_selector = ".Igw0E ._7UhW9.xLCgt a"
     likers_elems = list(browser.find(liker_elems_css_selector))
     last_liker = None
@@ -128,8 +133,8 @@ def fetch_caption(browser, dict_post):
 
 
 def fetch_comments(browser, dict_post):
-    if not settings.fetch_comments:
-        return
+    # if not settings.fetch_comments:
+    #     return
 
     show_more_selector = "button .glyphsSpriteCircle_add__outline__24__grey_9"
     show_more = browser.find_one(show_more_selector)
@@ -148,10 +153,10 @@ def fetch_comments(browser, dict_post):
     ele_comments = browser.find(".eo2As .gElp9")
     comments = []
     for els_comment in ele_comments[1:]:
-        author = browser.find_one(".FPmhX", els_comment).text
+        author = browser.find_one("._6lAjh", els_comment).text
 
         temp_element = browser.find("span", els_comment)
-
+        
         for element in temp_element:
 
             if element.text not in ['Verified','']:
@@ -178,8 +183,8 @@ def fetch_initial_comment(browser, dict_post):
 
 
 def fetch_details(browser, dict_post):
-    if not settings.fetch_details:
-        return
+    # if not settings.fetch_details:
+    #     return
 
     browser.open_new_tab(dict_post["key"])
 
